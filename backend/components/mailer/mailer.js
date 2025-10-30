@@ -1,5 +1,6 @@
+import { resendApiKey } from '../config/secret-config.js';
 import { Resend } from 'resend';
-const resend = new Resend('re_DDdWomfi_GBwGXnQN59bCRsoXQcAZRsK1');
+const resend = new Resend(resendApiKey);
 
 export default class Mailer {
   constructor() {
