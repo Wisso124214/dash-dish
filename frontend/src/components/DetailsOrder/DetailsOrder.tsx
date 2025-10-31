@@ -5,6 +5,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
+import { SERVER_URL } from '../../../config';
 
 type Extra = {
   name: string;
@@ -38,8 +39,23 @@ export default function DetailsOrder(data: Data) {
     setSelectedDish(null);
   };
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
     //fetch to backend with order details
+    await fetch(SERVER_URL + '/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dish: data,
+        quantity,
+        extras,
+        description,
+        totalCost,
+      }),
+    })
+      .then((res) => console.log(res))
+      .catch((err) => console.error(err));
 
     handleClose();
   };
