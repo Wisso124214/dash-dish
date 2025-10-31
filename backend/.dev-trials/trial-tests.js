@@ -29,7 +29,7 @@ export default class TrialTests {
         profile: this.PROFILES.ADMIN,
       };
 
-      // await this.loadMenuData(dataAPI.menu);
+      await this.loadMenuData(dataAPI.menu);
 
       // const res = await this.repo.setUserProfile(
       //   userData.username,
