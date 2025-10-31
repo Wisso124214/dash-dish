@@ -15,7 +15,7 @@ export default class Router {
   }
 
   async createRoutes() {
-    await createUserRoutes(this.app);
+    // await createUserRoutes(this.app);
     await createNoteRoutes(this.app);
   }
 }
