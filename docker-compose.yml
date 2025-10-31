@@ -1,0 +1,122 @@
+version: "3.8"
+
+services:
+  # SERVICIOS PÚBLICOS (vía Proxy)
+
+  reverse_proxy:
+    image: nginx:alpine
+    container_name: reverse_proxy
+    ports:
+      # Expone el puerto 80 del host al 80 del contenedor.
+      # Este es el ÚNICO punto de entrada a tu aplicación.
+      - "80:80"
+    volumes:
+      # Monta el archivo de configuración de Nginx
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - frontend_net # Solo necesita estar en la red de frontend
+    depends_on:
+      - frontend_deliveries
+      - backend_deliveries
+      - backend_dinein
+
+  frontend_deliveries:
+    container_name: frontend_deliveries
+    # Asume que tienes un Dockerfile en la carpeta ./frontend
+    build: ./frontend
+    networks:
+      - frontend_net
+    # No se exponen puertos al host, solo al proxy
+
+  backend_deliveries:
+    container_name: backend_deliveries
+    build: ./backend_deliveries
+    networks:
+      - frontend_net   # Para hablar con el proxy
+      - backend_net    # Para hablar con la DB, Rabbit, etc.
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/deliveries_db
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - LDAP_URL=ldap://openldap
+    depends_on:
+      - mongo
+      - redis
+      - rabbitmq
+      - openldap
+
+  backend_dinein:
+    container_name: backend_dinein
+    build: ./backend_dinein
+    networks:
+      - frontend_net   # Para hablar con el proxy
+      - backend_net    # Para hablar con la DB, Rabbit, etc.
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/dinein_db
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - LDAP_URL=ldap://openldap
+    depends_on:
+      - mongo
+      - redis
+      - rabbitmq
+      - openldap
+
+  # Servicios de backend (bases de datos, caché, colas, LDAP)
+  # RUNS ON PORT 27017
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    networks:
+      - backend_net # Solo en la red de backend
+    volumes:
+      - mongo_data:/data/db
+    env_file:
+      - ./envs/.env.mongo
+
+  # RUNS ON PORT 6379
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    networks:
+      - backend_net # Solo en la red de backend
+    volumes:
+      - redis_data:/data
+    env_file:
+      - ./envs/.env.redis
+
+  # RUNS ON PORT 5672
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    container_name: rabbitmq
+    networks:
+      - backend_net # Solo en la red de backend
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    
+  # RUNS ON PORT 389
+  openldap:
+    image: osixia/openldap:latest
+    container_name: openldap
+    networks:
+      - backend_net # Solo en la red de backend
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+    env_file:
+      - ./envs/.env.ldap
+    # Sin puertos expuestos
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  redis_data:
+  rabbitmq_data:
+  ldap_data:
+  ldap_config:
