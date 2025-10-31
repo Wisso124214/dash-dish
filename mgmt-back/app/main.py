@@ -12,7 +12,7 @@ from app.services.auth.auth import AuthService
 from app.services.pubsub.rabbit import RabbitPubSubService
 from app.services.ws.connection_manager import ConnectionManager
 from app.database.models import OrderStatus, OrderType, Order, Dish
-from app.lib.types.http import LoginRequest, SessionData
+from app.lib.types.http import LoginRequest, LoginResponse, SessionData
 
 load_dotenv()
 
@@ -25,6 +25,8 @@ db_client = DBClient(mongo_uri, mongo_db_name)
 pubsub = RabbitPubSubService(
     host=os.getenv("RABBITMQ_HOST", "rabbitmq"),
     port=int(os.getenv("RABBITMQ_PORT", 5672)),
+    user=os.getenv("RABBITMQ_USER", "admin"),
+    password=os.getenv("RABBITMQ_PASSWORD", "admin")
 )
 auth_service = AuthService()
 manager = ConnectionManager()
@@ -61,11 +63,11 @@ def get_current_user(session_id: str = Header(..., alias="session-id")):
     return user
 
 @app.post("/login")
-def login(request: LoginRequest):
-    session_id = auth_service.login(request.email, request.password)
-    if not session_id:
+def login(request: LoginRequest, response_model=LoginResponse):
+    login_response = auth_service.login(request.email, request.password)
+    if not login_response:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"session_id": session_id}
+    return login_response
 
 @app.get("/orders", response_model=List[Order])
 async def get_orders(
