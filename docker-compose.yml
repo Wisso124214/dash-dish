@@ -34,11 +34,8 @@ services:
     networks:
       - frontend_net   # Para hablar con el proxy
       - backend_net    # Para hablar con la DB, Rabbit, etc.
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/deliveries_db
-      - REDIS_HOST=redis
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - LDAP_URL=ldap://openldap
+    env_file:
+     - ./backend/.env
     depends_on:
       - mongo
       - redis
@@ -47,15 +44,12 @@ services:
 
   backend_dinein:
     container_name: backend_dinein
-    build: ./backend_dinein
+    build: ./mgmt-back
     networks:
       - frontend_net   # Para hablar con el proxy
       - backend_net    # Para hablar con la DB, Rabbit, etc.
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/dinein_db
-      - REDIS_HOST=redis
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - LDAP_URL=ldap://openldap
+    env_file:
+      - ./mgmt-back/.env
     depends_on:
       - mongo
       - redis
@@ -99,6 +93,8 @@ services:
   openldap:
     image: osixia/openldap:latest
     container_name: openldap
+    ports:
+      - "389:389" # Temporary: expose port for setup script
     networks:
       - backend_net # Solo en la red de backend
     volumes:

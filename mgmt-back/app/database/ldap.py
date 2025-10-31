@@ -1,4 +1,5 @@
 import ldap3
+from ldap3.core.exceptions import LDAPBindError, LDAPException
 from .models import LDAPUser
 from dotenv import load_dotenv
 import os
@@ -18,36 +19,44 @@ class LDAPDatabase:
         self.server = ldap3.Server(LDAP_SERVER, port=LDAP_PORT, get_info=ldap3.ALL)
         try:
             self.connection = ldap3.Connection(self.server, user=LDAP_ADMIN_USER, password=LDAP_ADMIN_PASSWORD, auto_bind=True)
-        except ldap3.core.exceptions.LDAPBindError as e:
+        except LDAPBindError as e:
             # Handle connection errors
             print(f"Failed to bind to LDAP server: {e}")
             self.connection = None
 
-    def get_user(self, email: str) -> LDAPUser | None:
+    def authenticate(self, email: str, password: str) -> LDAPUser | None:
+        """Authenticate a user by email and password using LDAP bind."""
         if not self.connection:
             return None
 
         search_filter = f'(mail={email})'
         
         try:
+            # First, search for the user to get their DN
             self.connection.search(
                 search_base=LDAP_SEARCH_BASE,
                 search_filter=search_filter,
-                attributes=['mail', 'userPassword', 'employeeType'] # Assuming 'employeeType' maps to role
+                attributes=['mail', 'employeeType']  # Don't retrieve password for security
             )
 
-            if len(self.connection.entries) > 0:
-                entry = self.connection.entries[0]
-                user = LDAPUser(
-                    email=entry.mail.value,
-                    password=entry.userPassword.value,
-                    role=entry.employeeType.value
-                )
-                return user
-            else:
+            if len(self.connection.entries) == 0:
                 return None
-        except ldap3.core.exceptions.LDAPException as e:
-            print(f"An LDAP error occurred: {e}")
+
+            user_dn = self.connection.entries[0].entry_dn
+            role = self.connection.entries[0].employeeType.value
+
+            # Now, try to bind with the user's DN and provided password
+            user_connection = ldap3.Connection(self.server, user=user_dn, password=password, auto_bind=True)
+            user_connection.unbind()  # Close the connection after successful bind
+
+            # If bind succeeded, return the user (without password)
+            return LDAPUser(email=email, password="", role=role)
+
+        except LDAPBindError:
+            # Authentication failed
+            return None
+        except LDAPException as e:
+            print(f"An LDAP error occurred during authentication: {e}")
             return None
 
     def __del__(self):

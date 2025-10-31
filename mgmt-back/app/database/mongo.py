@@ -1,6 +1,7 @@
 import pymongo
+import bson
 from .models import Dish, Order, OrderStatus, OrderType
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
 
 
@@ -14,7 +15,7 @@ class DBClient:
 
     def create_order(self, order: Order):
         orders_collection = self.get_collection("orders")
-        result = orders_collection.insert_one(order.dict(by_alias=True))
+        result = orders_collection.insert_one(order.model_dump(by_alias=True, exclude={'id'}))
         return str(result.inserted_id)
 
     def get_orders(
@@ -25,17 +26,27 @@ class DBClient:
         to_date: Optional[datetime] = None,
     ):
         orders_collection = self.get_collection("orders")
-        query = {"status": status} if status else {}
+        query: dict[str, Any] = {"status": status} if status else {}
         if from_date:
             query["created_at"] = {"$gte": from_date}
         if to_date:
             query["created_at"] = {"$lte": to_date}
+            
+        if type:
+            query["type"] = type
         return orders_collection.find(query)
+    
+    def get_order_by_id(self, order_id: str) -> Optional[Order]:
+        orders_collection = self.get_collection("orders")
+        data = orders_collection.find_one({"_id": bson.ObjectId(order_id)})
+        if data:
+            return Order.model_validate(dict(data), by_alias=True)
+        return None
       
     def update_order_status(self, order_id: str, new_status: OrderStatus):
         orders_collection = self.get_collection("orders")
         result = orders_collection.update_one(
-            {"_id": pymongo.ObjectId(order_id)},
+            {"_id": bson.ObjectId(order_id)},
             {"$set": {"status": new_status, "updated_at": datetime.now()}}
         )
         return result.modified_count > 0

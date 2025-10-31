@@ -9,7 +9,7 @@ class DishExtra(BaseModel):
 
 
 class Dish(BaseModel):
-    id: str = Field(None, alias="_id")
+    id: Optional[str] = Field(None, alias="_id")
     title: str
     description: Optional[str] = None
     cost_unit: float
@@ -24,17 +24,17 @@ class OrderItem(BaseModel):
     selected_extras: Optional[List[DishExtra]] = None
 
 
-type OrderStatus = Literal["preparing", "done", "delivered"]
-type OrderType = Literal["dinein", "delivery"]
+OrderStatus = Literal["preparing", "done", "delivered"]
+OrderType = Literal["dinein", "delivery"]
 
 class Order(BaseModel):
-    id: str = Field(None, alias="_id")
+    id: Optional[str] = Field(None, alias="_id")
     id_user: str
     items: List[OrderItem]
     total_cost: float
     status: OrderStatus
     type: OrderType
-    created_at: datetime = Field(default_factory=datetime.now())
+    created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = None
     
 class LDAPUser(BaseModel):

@@ -1,5 +1,8 @@
+aio-pika
 fastapi
 ldap3
-pika
 pymongo
 python-dotenv
+redis
+uvicorn
+aio-pika
