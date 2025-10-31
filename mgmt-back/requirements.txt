@@ -1,0 +1,5 @@
+fastapi
+ldap3
+pika
+pymongo
+python-dotenv
