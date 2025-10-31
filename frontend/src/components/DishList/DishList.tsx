@@ -38,7 +38,7 @@ export default function DishList() {
 
   return (
     <div
-      className='flex flex-col gap-2 p-0 m-0 mt-[5vh] max-h-[90vh] overflow-y-auto w-full self-center'
+      className='flex flex-col gap-2'
       onScroll={(e) => {
         const target = e.target as HTMLDivElement;
         if (target.scrollTop + target.clientHeight >= target.scrollHeight) {

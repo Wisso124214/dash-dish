@@ -13,6 +13,8 @@ export type DishData = {
 interface SelectedDishContextType {
   selectedDish: DishData | null;
   setSelectedDish: (dish: DishData | null) => void;
+  selectedPage: string;
+  setSelectedPage: (page: string) => void;
 }
 
 const SelectedDishContext = createContext<SelectedDishContextType | undefined>(
@@ -33,9 +35,12 @@ export const SelectedDishProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [selectedDish, setSelectedDish] = useState<DishData | null>(null);
+  const [selectedPage, setSelectedPage] = useState<string>('');
 
   return (
-    <SelectedDishContext.Provider value={{ selectedDish, setSelectedDish }}>
+    <SelectedDishContext.Provider
+      value={{ selectedDish, setSelectedDish, selectedPage, setSelectedPage }}
+    >
       {children}
     </SelectedDishContext.Provider>
   );
