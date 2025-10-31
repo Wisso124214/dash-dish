@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { SERVER_URL, endpoints } from '../../../config';
 import Dish from '../Dish/Dish';
 import Loader from '../Loader/Loader';
+import { useSelectedDish } from './SelectedDishContext';
 
 type DishData = {
   id_api: string;
@@ -15,6 +16,7 @@ type DishData = {
 
 export default function DishList() {
   const [dishes, setDishes] = useState<DishData[]>([]);
+  const { setSelectedDish } = useSelectedDish();
 
   const fetchDishes = async () => {
     await fetch(SERVER_URL + endpoints.dishes + '?offset=' + dishes.length)
@@ -49,7 +51,9 @@ export default function DishList() {
       ) : (
         <>
           {dishes.map((dish, index) => (
-            <Dish key={index} data={dish} />
+            <div key={index} onClick={() => setSelectedDish(dish)}>
+              <Dish data={dish} />
+            </div>
           ))}
           <Loader />
         </>

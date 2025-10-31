@@ -3,9 +3,11 @@ body {
   scrollbar-color: transparent transparent;
 
   overflow: hidden;
+  user-select: none;
 
   --background-absolute: #fff;
   --foreground-absolute: #000;
+
   --text-color: #fff;
 
   --primary-color: #d5311d;
@@ -16,6 +18,12 @@ body {
     var(--tertiary-color) 90%,
     var(--background-absolute)
   );
+  --tertiary-color-dark: color-mix(
+    in oklch,
+    var(--tertiary-color) 80%,
+    var(--foreground-absolute)
+  );
+
   --gray-color: #222;
   --gray-traslucent: color-mix(in oklch, var(--gray-color) 40%, transparent);
   --box-shadow-color: rgba(255, 255, 255, 0.6);
@@ -25,10 +33,63 @@ body {
     var(--foreground-absolute) 75%,
     var(--background-absolute)
   );
+  --gray-background-light: color-mix(
+    in oklch,
+    var(--foreground-absolute) 73%,
+    var(--background-absolute)
+  );
   --gray-muted: color-mix(
     in oklch,
     var(--foreground-absolute) 35%,
     var(--background-absolute)
+  );
+  --gray-muted-light: color-mix(
+    in oklch,
+    var(--foreground-absolute) 15%,
+    var(--background-absolute)
+  );
+  --gray-muted-dark: color-mix(
+    in oklch,
+    var(--foreground-absolute) 50%,
+    var(--background-absolute)
+  );
+  --gray-muted-dark-2: color-mix(
+    in oklch,
+    var(--foreground-absolute) 60%,
+    var(--background-absolute)
+  );
+
+  --background-absolute-traslucent: color-mix(
+    in oklch,
+    var(--background-absolute) 80%,
+    transparent
+  );
+  --background-absolute-traslucent-2: color-mix(
+    in oklch,
+    var(--background-absolute) 90%,
+    transparent
+  );
+
+  --foreground-absolute-traslucent: color-mix(
+    in oklch,
+    var(--foreground-absolute) 80%,
+    transparent
+  );
+  --foreground-absolute-traslucent-2: color-mix(
+    in oklch,
+    var(--foreground-absolute) 90%,
+    transparent
+  );
+
+  --tertiary-color-traslucent: color-mix(
+    in oklch,
+    var(--tertiary-color) 80%,
+    transparent
+  );
+  --tertiary-color-traslucent-2: color-mix(
+    in oklch,
+    var(--tertiary-color) 90%,
+    transparent
   );
 
   background: linear-gradient(
@@ -42,4 +103,16 @@ body {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  height: 100vh;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
