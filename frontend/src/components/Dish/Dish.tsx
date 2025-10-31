@@ -10,7 +10,7 @@ type DishData = {
 
 export default function Dish({ data }: { data: DishData }) {
   return (
-    <div className='w-19/20 max-w-4xl self-center flex flex-row bg-(--gray-background) rounded-xl gap-2 shadow-xl shadow-black/70 scale-90 hover:scale-95 transition-transform duration-300 text-(--text-color)'>
+    <div className='w-19/20 max-w-4xl mx-auto flex flex-row bg-(--gray-background) rounded-xl gap-2 shadow-xl shadow-black/70 scale-90 hover:scale-95 transition-transform duration-300 text-(--text-color)'>
       <div
         className='flex w-50 rounded-xl overflow-hidden min-w-[100px]'
         style={{ boxShadow: '2.5px 0 5px 1px rgba(0, 0, 0, .8)' }}

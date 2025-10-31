@@ -15,7 +15,9 @@ function AppContent() {
       <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
         {selectedDish && <DetailsOrder {...selectedDish} />}
         <Header />
-        <DishList />
+        <div className='flex flex-col items-center mt-4 max-w-4xl mx-auto'>
+          <DishList />
+        </div>
       </ThemeProvider>
     </>
   );

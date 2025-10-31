@@ -81,6 +81,16 @@ body {
     transparent
   );
 
+  --secondary-color-traslucent: color-mix(
+    in oklch,
+    var(--secondary-color) 80%,
+    transparent
+  );
+  --secondary-color-traslucent-2: color-mix(
+    in oklch,
+    var(--secondary-color) 90%,
+    transparent
+  );
   --tertiary-color-traslucent: color-mix(
     in oklch,
     var(--tertiary-color) 80%,
