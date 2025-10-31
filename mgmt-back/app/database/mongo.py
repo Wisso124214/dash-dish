@@ -34,12 +34,23 @@ class DBClient:
             
         if type:
             query["type"] = type
-        return orders_collection.find(query)
+        cursor = orders_collection.find(query)
+        
+        for doc in cursor:
+            # convert top-level _id to string so Pydantic string fields validate correctly
+            if "_id" in doc:
+                try:
+                    doc["_id"] = str(doc["_id"])
+                except Exception:
+                    # fallback: leave as-is if conversion fails
+                    pass
+            yield doc
     
     def get_order_by_id(self, order_id: str) -> Optional[Order]:
         orders_collection = self.get_collection("orders")
         data = orders_collection.find_one({"_id": bson.ObjectId(order_id)})
         if data:
+            data["_id"] = str(data["_id"])
             return Order.model_validate(dict(data), by_alias=True)
         return None
       
@@ -53,6 +64,16 @@ class DBClient:
       
     def get_dishes(self):
         dishes_collection = self.get_collection("dishes")
-        return dishes_collection.find()
+        # Return an iterator of dicts where ObjectId values are converted to strings
+        cursor = dishes_collection.find()
+        for doc in cursor:
+            # convert top-level _id to string so Pydantic string fields validate correctly
+            if "_id" in doc:
+                try:
+                    doc["_id"] = str(doc["_id"])
+                except Exception:
+                    # fallback: leave as-is if conversion fails
+                    pass
+            yield doc
       
     
