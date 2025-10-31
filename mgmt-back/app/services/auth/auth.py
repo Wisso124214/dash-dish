@@ -1,7 +1,7 @@
 from ...database.ldap import LDAPDatabase
 from ..session.session import SessionService
 from typing import Optional
-from app.lib.types.http import SessionData
+from app.lib.types.http import SessionData, LoginResponse
 
 
 class AuthService:
@@ -9,7 +9,7 @@ class AuthService:
         self.ldap_db = LDAPDatabase()
         self.session_service = SessionService()
 
-    def login(self, email: str, password: str) -> Optional[str]:
+    def login(self, email: str, password: str) -> Optional[LoginResponse]:
         """
         Authenticate user with LDAP and create a session.
         Returns session_id if successful, None otherwise.
@@ -19,7 +19,7 @@ class AuthService:
             # Create session with user data (excluding password)
             session_data = SessionData(email=user.email, role=user.role)
             session_id = self.session_service.create_session(session_data)
-            return session_id
+            return LoginResponse(session_id=session_id, role=user.role)
         return None
 
     def logout(self, session_id: str) -> bool:

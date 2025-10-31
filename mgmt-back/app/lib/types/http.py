@@ -8,3 +8,7 @@ class SessionData(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+    
+class LoginResponse(BaseModel):
+    session_id: str
+    role: Optional[str] = None
