@@ -30,7 +30,7 @@ services:
 
   backend_deliveries:
     container_name: backend_deliveries
-    build: ./backend_deliveries
+    build: ./backend
     networks:
       - frontend_net   # Para hablar con el proxy
       - backend_net    # Para hablar con la DB, Rabbit, etc.
