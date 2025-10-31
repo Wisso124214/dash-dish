@@ -1,3 +1,5 @@
+import { DB_URL } from './secret-config.js';
+
 export default class Config {
   constructor() {
     if (!Config.instance) {
@@ -5,9 +7,7 @@ export default class Config {
       this.SERVER_IP = 'localhost';
       this.PROTOCOL = 'http';
       this.SERVER_URL = `${this.PROTOCOL}://${this.SERVER_IP}:${this.PORT}`;
-      this.DB_URL =
-        process.env.DB_URL ||
-        'mongodb+srv://backend-dash-dish:cN7eGkIdBPED9917@cluster0.o7x9c.mongodb.net/dash-dish?appName=Cluster0';
+      this.DB_URL = process.env.DB_URL || DB_URL;
 
       this.PROFILES = {
         CLIENT: {
