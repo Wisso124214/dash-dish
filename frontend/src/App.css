@@ -1,6 +1,12 @@
 body {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+
+  overflow: hidden;
+
   --background-absolute: #fff;
   --foreground-absolute: #000;
+  --text-color: #fff;
 
   --primary-color: #d5311d;
   --secondary-color: #3d1b39;
@@ -11,19 +17,24 @@ body {
     var(--background-absolute)
   );
   --gray-color: #222;
+  --gray-traslucent: color-mix(in oklch, var(--gray-color) 40%, transparent);
+  --box-shadow-color: rgba(255, 255, 255, 0.6);
 
   --gray-background: color-mix(
     in oklch,
     var(--foreground-absolute) 75%,
-    var(--background)
+    var(--background-absolute)
   );
   --gray-muted: color-mix(
     in oklch,
     var(--foreground-absolute) 35%,
-    var(--background)
+    var(--background-absolute)
   );
 
-  background-color: var(--primary-color);
+  background: linear-gradient(
+    var(--foreground-absolute) 10%,
+    var(--primary-color) 70%
+  );
 }
 
 #root {
