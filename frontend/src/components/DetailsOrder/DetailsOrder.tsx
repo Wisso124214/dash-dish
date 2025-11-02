@@ -3,9 +3,11 @@ import { useSelectedDish } from '../DishList/SelectedDishContext';
 import { NumberInput } from '../NumberInput/NumberInput';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
+import { customToast } from '../CustomToaster/custom-sonner';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
-import { SERVER_URL } from '../../../config';
+// import { toast } from 'sonner';
+// import { SERVER_URL } from '../../../config';
 
 type Extra = {
   name: string;
@@ -40,22 +42,65 @@ export default function DetailsOrder(data: Data) {
   };
 
   const handleOrder = async () => {
+    const randomMin = Math.floor(Math.random() * 15) + 5;
     //fetch to backend with order details
-    await fetch(SERVER_URL + '/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    // await fetch(SERVER_URL + '/orders', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     dish: data,
+    //     quantity,
+    //     extras,
+    //     description,
+    //     totalCost,
+    //   }),
+    // })
+    //   .then((res) => console.log(res))
+    //   .catch((err) => console.error(err));
+
+    // toast.success('Su pedido ha sido realizado', {
+    //   description: `Su pedido llegará en ${randomMin} minutos.`,
+    //   action: {
+    //     label: 'Undo',
+    //     onClick: () => console.log('Undo'),
+    //   },
+    //   duration: 800000,
+    // });
+    // toast.success('Su pedido ha sido realizado', {
+    //   description: `Su pedido llegará en ${randomMin} minutos.`,
+    //   action: {
+    //     label: 'Undo',
+    //     onClick: () => console.log('Undo'),
+    //   },
+    //   duration: 800000,
+    // });
+
+    customToast('Ha habido un error con su pedido', {
+      description: `Su pedido no pudo ser procesado. Inténtelo de nuevo más tarde.`,
+      action: {
+        label: 'Deshacer',
+        onClick: () => {
+          console.log('Deshacer');
+        },
+        actionButtonStyle: { padding: '6px 16px', fontWeight: 'bold' },
       },
-      body: JSON.stringify({
-        dish: data,
-        quantity,
-        extras,
-        description,
-        totalCost,
-      }),
-    })
-      .then((res) => console.log(res))
-      .catch((err) => console.error(err));
+      actionButtonClassName:
+        'bg-red-500 text-white rounded-lg px-4 py-2 hover:bg-red-600',
+      duration: 800000,
+      extra: (
+        <div
+          className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-2'
+          role='alert'
+        >
+          <strong className='font-bold'>¡Error!</strong>
+          <span className='block sm:inline ml-2'>
+            No se pudo procesar el pedido.
+          </span>
+        </div>
+      ),
+    });
 
     handleClose();
   };
@@ -63,7 +108,7 @@ export default function DetailsOrder(data: Data) {
   return (
     <div
       id='details-order-container'
-      className='absolute z-11 top-0 left-0 w-full h-full flex justify-center items-center bg-(--gray-traslucent)'
+      className='absolute z-11 top-0 left-0 w-full h-full flex justify-center items-center bg-(--gray-translucent)'
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           handleClose();
@@ -76,7 +121,7 @@ export default function DetailsOrder(data: Data) {
           <div className='relative h-1/2'>
             <Button
               id='close-details-order-button'
-              className='absolute z-20 top-0 left-0 m-2 aspect-square bg-(--secondary-color-traslucent) hover:bg-(--secondary-color-traslucent-2) active:bg-(--secondary-color-traslucent-2) text-(--tertiary-color)'
+              className='absolute z-20 top-0 left-0 m-2 aspect-square bg-(--secondary-color-translucent) hover:bg-(--secondary-color-translucent-2) active:bg-(--secondary-color-translucent-2) text-(--tertiary-color)'
               onClick={handleClose}
             >
               <svg

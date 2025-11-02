@@ -13,7 +13,7 @@ export default function Loader() {
         </ItemMedia>
         <ItemContent>
           <ItemTitle className='line-clamp-1 w-full text-center'>
-            Loading...
+            Cargando...
           </ItemTitle>
         </ItemContent>
       </Item>
