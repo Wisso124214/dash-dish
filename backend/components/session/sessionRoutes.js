@@ -312,15 +312,18 @@ export const createRoutes = async (app) => {
         email: user.email,
         userId: user._id,
       });
-      // mailer.sendRecoveryEmail(user.email, token);
+      const origin = req.headers.origin;
+      mailer.sendRecoveryEmail(user.email, token, origin);
       res.send({
-        message: 'Se ha enviado un email de recuperación',
+        message:
+          'Se ha enviado un correo de verificación a la dirección ingresada. Por favor, revise su correo y siga los pasos indicados.',
         token,
       });
     } else {
       res.status(ERROR_CODES.NOT_FOUND).send({
         errorCode: ERROR_CODES.NOT_FOUND,
-        message: 'Usuario no encontrado',
+        message:
+          'No se ha encontrado un usuario con este correo. Por favor, verifique e intente nuevamente.',
       });
     }
   });

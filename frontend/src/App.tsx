@@ -12,6 +12,8 @@ import { ToasterProvider } from './components/CustomToaster/ToasterContext';
 import NotFound from './pages/NotFound';
 import { Toaster } from 'sonner';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
+import ForgotPassword from './pages/ForgotPassword';
 // import { toast } from 'sonner';
 
 // import { CustomToaster } from './components/CustomToaster/CustomToaster.tsx';
@@ -80,6 +82,10 @@ function AppContent() {
                 return <Login />;
               case '/signup':
                 return <Register />;
+              case '/forgot-password':
+                return <ForgotPassword />;
+              case '/reset-password':
+                return <ResetPassword />;
               default:
                 return <NotFound />;
             }
