@@ -1,24 +1,32 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {Text, Box} from 'ink';
-import LoginScreen from './components/LoginScreen.js';
+import LoginScreen from './screens/LoginScreen.js';
+import { useAtomValue } from 'jotai';
+import { sessionAtom, screenAtom } from './lib/atoms.js';
+import CashRegisterScreen from './screens/CashRegisterScreen.js';
+import KitchenScreen from './screens/KitchenScreen.js';
 
 export default function App() {
-	const [sessionId, setSessionId] = useState<string | null>(null);
-	const [userEmail, setUserEmail] = useState<string>('');
+	const session = useAtomValue(sessionAtom);
+	const screen = useAtomValue(screenAtom);
 
-	const handleLoginSuccess = (session: string, email: string) => {
-		setSessionId(session);
-		setUserEmail(email);
-	};
 
-	if (!sessionId) {
-		return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+	if (!session || screen === 'login') {
+		return <LoginScreen />;
+	}
+
+	if (session.role === "register") {
+		return <CashRegisterScreen />;
+	}
+
+	if (session.role === "kitchen") {
+		return <KitchenScreen />;
 	}
 
 	return (
 		<Box margin={1} flexDirection="column">
 			<Box marginBottom={1} borderStyle="round" paddingX={2}>
-				<Text color="green">✓ Logged in as: {userEmail}</Text>
+				<Text color="green">✓ Logged in as: {session.email}, Role: {session.role}</Text>
 			</Box>
 			<Box borderStyle="single" padding={1}>
 				<Text>Welcome to DashDish Register</Text>

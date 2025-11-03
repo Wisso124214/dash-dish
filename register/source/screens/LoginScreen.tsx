@@ -1,12 +1,14 @@
 import React, {useState} from 'react';
 import {Box, Text, useInput} from 'ink';
 import TextInput from 'ink-text-input';
+import { login } from '../lib/apiManager.js';
+import { sessionAtom } from '../lib/atoms.js';
+import { screenAtom } from '../lib/atoms.js';
+import { useSetAtom } from 'jotai';
 
-interface LoginScreenProps {
-	onLoginSuccess: (sessionId: string, email: string) => void;
-}
 
-export default function LoginScreen({onLoginSuccess}: LoginScreenProps) {
+
+export default function LoginScreen() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [focusedField, setFocusedField] = useState<'email' | 'password'>(
@@ -14,6 +16,9 @@ export default function LoginScreen({onLoginSuccess}: LoginScreenProps) {
 	);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const setSession = useSetAtom(sessionAtom);
+	const setScreen = useSetAtom(screenAtom);
 
 	useInput((_input, key) => {
 		if (isLoading) return;
@@ -41,22 +46,9 @@ export default function LoginScreen({onLoginSuccess}: LoginScreenProps) {
 		setError(null);
 
 		try {
-			const apiUrl = process.env['API_URL'] || 'http://localhost:8000';
-			const response = await fetch(`${apiUrl}/login`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({email, password}),
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
-				throw new Error(errorData.detail || 'Login failed');
-			}
-
-			const data = await response.json();
-			onLoginSuccess(data.session_id, email);
+			const data = await login(email, password);
+			setSession({ email: email, role: data.role, sessionId: data.session_id });
+			setScreen(data.role);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Connection failed');
 			setIsLoading(false);
@@ -67,7 +59,7 @@ export default function LoginScreen({onLoginSuccess}: LoginScreenProps) {
 		<Box flexDirection="column" padding={1}>
 			<Box marginBottom={1}>
 				<Text bold color="cyan">
-					Cash Register Login
+					Superrestaurant Login
 				</Text>
 			</Box>
 

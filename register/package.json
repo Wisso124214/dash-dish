@@ -16,10 +16,15 @@
 		"dist"
 	],
 	"dependencies": {
+		"@types/ws": "^8.18.1",
+		"dotenv": "^17.2.3",
 		"ink": "^4.1.0",
 		"ink-text-input": "^5.0.1",
+		"ink-use-stdout-dimensions": "^1.0.5",
+		"jotai": "^2.15.0",
 		"meow": "^11.0.0",
-		"react": "^18.2.0"
+		"react": "^18.2.0",
+		"ws": "^8.18.3"
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
