@@ -8,7 +8,7 @@ let app = null;
 do {
   app = (() => {
     const newApp = express();
-    newApp.use(cors());
+    newApp.use(cors({ origin: 'http://localhost:5173', credentials: true }));
     newApp.use(bodyParser.json());
     newApp.use(express.urlencoded({ extended: true }));
     newApp.use(

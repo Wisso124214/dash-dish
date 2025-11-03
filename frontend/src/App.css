@@ -1,9 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Alfa+Slab+One&display=swap');
+
 body {
-  scrollbar-width: none;
+  scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 
   overflow: hidden;
   user-select: none;
+
+  --font-big-title: 'Alfa Slab One', Helvetica;
 
   --background-absolute: #fff;
   --foreground-absolute: #000;
@@ -13,31 +17,18 @@ body {
   --primary-color: #d5311d;
   --secondary-color: #3d1b39;
   --tertiary-color: #e69524;
-  --tertiary-color-light: color-mix(
-    in oklch,
-    var(--tertiary-color) 90%,
-    var(--background-absolute)
-  );
-  --tertiary-color-dark: color-mix(
-    in oklch,
-    var(--tertiary-color) 80%,
-    var(--foreground-absolute)
-  );
 
-  --gray-color: #222;
-  --gray-traslucent: color-mix(in oklch, var(--gray-color) 40%, transparent);
+  --gray-color: #18181b;
+  --gray-translucent: color-mix(in oklch, var(--gray-color) 40%, transparent);
   --box-shadow-color: rgba(255, 255, 255, 0.6);
 
-  --gray-background: color-mix(
-    in oklch,
-    var(--foreground-absolute) 75%,
-    var(--background-absolute)
-  );
   --gray-background-light: color-mix(
     in oklch,
-    var(--foreground-absolute) 73%,
+    var(--gray-color) 93%,
     var(--background-absolute)
   );
+  --gray-background: var(--gray-color);
+
   --gray-muted: color-mix(
     in oklch,
     var(--foreground-absolute) 35%,
@@ -59,46 +50,88 @@ body {
     var(--background-absolute)
   );
 
-  --background-absolute-traslucent: color-mix(
+  --background-absolute-translucent: color-mix(
     in oklch,
     var(--background-absolute) 80%,
     transparent
   );
-  --background-absolute-traslucent-2: color-mix(
+  --background-absolute-translucent-2: color-mix(
     in oklch,
     var(--background-absolute) 90%,
     transparent
   );
 
-  --foreground-absolute-traslucent: color-mix(
+  --foreground-absolute-translucent: color-mix(
     in oklch,
     var(--foreground-absolute) 80%,
     transparent
   );
-  --foreground-absolute-traslucent-2: color-mix(
+  --foreground-absolute-translucent-2: color-mix(
     in oklch,
     var(--foreground-absolute) 90%,
     transparent
   );
 
-  --secondary-color-traslucent: color-mix(
+  --primary-color-light: color-mix(
+    in oklch,
+    var(--primary-color) 90%,
+    var(--background-absolute)
+  );
+  --primary-color-dark: color-mix(
+    in oklch,
+    var(--primary-color) 90%,
+    var(--foreground-absolute)
+  );
+
+  --tertiary-color-light: color-mix(
+    in oklch,
+    var(--tertiary-color) 90%,
+    var(--background-absolute)
+  );
+  --tertiary-color-dark: color-mix(
+    in oklch,
+    var(--tertiary-color) 80%,
+    var(--foreground-absolute)
+  );
+
+  --primary-color-translucent: color-mix(
+    in oklch,
+    var(--primary-color) 80%,
+    transparent
+  );
+  --primary-color-translucent-2: color-mix(
+    in oklch,
+    var(--primary-color) 90%,
+    transparent
+  );
+  --secondary-color-translucent: color-mix(
     in oklch,
     var(--secondary-color) 80%,
     transparent
   );
-  --secondary-color-traslucent-2: color-mix(
+  --secondary-color-translucent-2: color-mix(
     in oklch,
     var(--secondary-color) 90%,
     transparent
   );
-  --tertiary-color-traslucent: color-mix(
+  --tertiary-color-translucent: color-mix(
     in oklch,
     var(--tertiary-color) 80%,
     transparent
   );
-  --tertiary-color-traslucent-2: color-mix(
+  --tertiary-color-translucent-2: color-mix(
     in oklch,
     var(--tertiary-color) 90%,
+    transparent
+  );
+  --gray-background-translucent: color-mix(
+    in oklch,
+    var(--gray-background) 80%,
+    transparent
+  );
+  --gray-background-translucent-2: color-mix(
+    in oklch,
+    var(--gray-background) 90%,
     transparent
   );
 
@@ -125,4 +158,19 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+}
+
+.toaster-success {
+  color: #22c55e !important;
+}
+.toaster-error {
+  color: var(--color-destructive) !important;
+}
+.toaster-warning {
+  background: #facc15 !important;
+  color: #000 !important;
+}
+.toaster-info {
+  background: #3b82f6 !important;
+  color: #fff !important;
 }

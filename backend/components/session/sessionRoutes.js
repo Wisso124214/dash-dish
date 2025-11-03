@@ -31,6 +31,35 @@ export const createRoutes = async (app) => {
     }
 
     const userData = req.body || JSON.parse(req.headers.data || '{}');
+    if (!userData || !userData.username || !userData.password) {
+      return res.status(ERROR_CODES.BAD_REQUEST).send({
+        errorCode: ERROR_CODES.BAD_REQUEST,
+        message: 'Por favor ingrese nombre de usuario y contraseña',
+      });
+    }
+
+    const users = await fetch(`${SERVER_URL}/users`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).then(async (res) => res.json());
+
+    if (!users || users.length === 0) {
+      return res.status(ERROR_CODES.NOT_FOUND).send({
+        errorCode: ERROR_CODES.NOT_FOUND,
+        message: 'No hay usuarios registrados',
+      });
+    }
+
+    const user = users.find((u) => u.username === userData.username);
+    if (!user) {
+      return res.status(ERROR_CODES.NOT_FOUND).send({
+        errorCode: ERROR_CODES.NOT_FOUND,
+        message:
+          'Usuario no encontrado. Verifique su nombre de usuario o regístrese.',
+      });
+    }
 
     await repo
       .getUsersWhere({ username: userData.username })
@@ -38,7 +67,7 @@ export const createRoutes = async (app) => {
         if (!users) {
           return res.status(ERROR_CODES.NOT_FOUND).send({
             errorCode: ERROR_CODES.NOT_FOUND,
-            message: 'Usuario no encontrado',
+            message: 'Usuario no encontrado. Verifique sus credenciales.',
           });
         } else if (Array.isArray(users) && users?.length > 1) {
           return res.status(ERROR_CODES.BAD_REQUEST).send({
@@ -79,6 +108,10 @@ export const createRoutes = async (app) => {
                 });
               } else {
                 createAndUpdateSession(req, userData);
+                console.log(
+                  'User ' + user.username + ' logged in with profile:',
+                  userProfiles?.[0]
+                );
                 return res.send({
                   message: `Bienvenido ${userProfiles?.[0]}, ${user.username}`,
                 });
@@ -87,7 +120,7 @@ export const createRoutes = async (app) => {
         } else {
           return res.status(ERROR_CODES.UNAUTHORIZED).send({
             errorCode: ERROR_CODES.UNAUTHORIZED,
-            message: 'Credenciales inválidas',
+            message: 'Contraseña incorrecta. Intente nuevamente.',
           });
         }
       });
@@ -232,7 +265,11 @@ export const createRoutes = async (app) => {
 
   app.get('/logout', async (req, res) => {
     if (!existSession(req)) {
-      res.send({ message: 'No has iniciado sesión.', redirect: '/login' });
+      res.send({
+        errorCode: ERROR_CODES.BAD_REQUEST,
+        message: 'No has iniciado sesión.',
+        redirect: '/login',
+      });
       return;
     }
     const result = destroySession(req);
@@ -275,15 +312,18 @@ export const createRoutes = async (app) => {
         email: user.email,
         userId: user._id,
       });
-      // mailer.sendRecoveryEmail(user.email, token);
+      const origin = req.headers.origin;
+      mailer.sendRecoveryEmail(user.email, token, origin);
       res.send({
-        message: 'Se ha enviado un email de recuperación',
+        message:
+          'Se ha enviado un correo de verificación a la dirección ingresada. Por favor, revise su correo y siga los pasos indicados.',
         token,
       });
     } else {
       res.status(ERROR_CODES.NOT_FOUND).send({
         errorCode: ERROR_CODES.NOT_FOUND,
-        message: 'Usuario no encontrado',
+        message:
+          'No se ha encontrado un usuario con este correo. Por favor, verifique e intente nuevamente.',
       });
     }
   });

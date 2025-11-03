@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { SERVER_URL, endpoints } from '../../../config';
 import Dish from '../Dish/Dish';
 import Loader from '../Loader/Loader';
@@ -15,6 +15,7 @@ type DishData = {
 };
 
 export default function DishList() {
+  const intervalRef = useRef<number | null>(null);
   const [dishes, setDishes] = useState<DishData[]>([]);
   const { setSelectedDish } = useSelectedDish();
 
@@ -30,11 +31,36 @@ export default function DishList() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      await fetchDishes();
+    const fetchDishesLocal = async () => {
+      await fetch(SERVER_URL + endpoints.dishes + '?offset=' + dishes.length)
+        .then((response) => response.json())
+        .then((data) => {
+          setDishes((prevDishes) => [...prevDishes, ...data]);
+        })
+        .catch((error) => {
+          console.error('Error fetching dishes:', error);
+        });
     };
-    fetchData();
-  }, []);
+    const fetchData = async () => {
+      if (dishes.length === 0) {
+        await fetchDishesLocal();
+      }
+    };
+    intervalRef.current = window.setInterval(fetchData, 1000);
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [dishes.length]);
+
+  useEffect(() => {
+    if (dishes.length > 0 && intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [dishes.length]);
 
   return (
     <div

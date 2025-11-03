@@ -5,7 +5,7 @@ services:
 
   reverse_proxy:
     image: nginx:alpine
-    container_name: reverse_proxy
+    # container_name: reverse_proxy
     ports:
       # Expone el puerto 80 del host al 80 del contenedor.
       # Este es el ÚNICO punto de entrada a tu aplicación.
@@ -18,7 +18,7 @@ services:
     depends_on:
       - frontend_deliveries
       - backend_deliveries
-      - backend_dinein
+      # - backend_dinein
 
   frontend_deliveries:
     container_name: frontend_deliveries
@@ -32,10 +32,10 @@ services:
     container_name: backend_deliveries
     build: ./backend
     networks:
-      - frontend_net   # Para hablar con el proxy
-      - backend_net    # Para hablar con la DB, Rabbit, etc.
+      - frontend_net # Para hablar con el proxy
+      - backend_net # Para hablar con la DB, Rabbit, etc.
     env_file:
-     - ./backend/.env
+      - ./backend/.env
     depends_on:
       - mongo
       - redis
@@ -46,8 +46,8 @@ services:
     container_name: backend_dinein
     build: ./mgmt-back
     networks:
-      - frontend_net   # Para hablar con el proxy
-      - backend_net    # Para hablar con la DB, Rabbit, etc.
+      - frontend_net # Para hablar con el proxy
+      - backend_net # Para hablar con la DB, Rabbit, etc.
     env_file:
       - ./mgmt-back/.env
     depends_on:
@@ -88,7 +88,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-    
+
   # RUNS ON PORT 389
   openldap:
     image: osixia/openldap:latest
