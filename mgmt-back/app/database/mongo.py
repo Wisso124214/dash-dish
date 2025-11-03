@@ -3,6 +3,7 @@ import bson
 from .models import Dish, Order, OrderStatus, OrderType
 from typing import Optional, Any
 from datetime import datetime
+import logging
 
 
 class DBClient:
@@ -43,6 +44,7 @@ class DBClient:
                     doc["_id"] = str(doc["_id"])
                 except Exception:
                     # fallback: leave as-is if conversion fails
+                    logging.warning(f"Failed to convert ObjectId to string: {doc['_id']}")
                     pass
             yield doc
     
@@ -68,12 +70,22 @@ class DBClient:
         cursor = dishes_collection.find()
         for doc in cursor:
             # convert top-level _id to string so Pydantic string fields validate correctly
+            logging.info(f"Processing dish document: {doc}")
             if "_id" in doc:
                 try:
                     doc["_id"] = str(doc["_id"])
                 except Exception:
                     # fallback: leave as-is if conversion fails
+                    logging.warning(f"Failed to convert ObjectId to string: {doc['_id']}")
                     pass
             yield doc
+            
+    def get_dish_by_id(self, dish_id: str) -> Optional[Dish]:
+        dishes_collection = self.get_collection("dishes")
+        data = dishes_collection.find_one({"_id": bson.ObjectId(dish_id)})
+        if data:
+            data["_id"] = str(data["_id"])
+            return Dish.model_validate(dict(data), by_alias=True)
+        return None
       
     
