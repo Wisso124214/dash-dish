@@ -7,9 +7,9 @@ services:
     image: nginx:alpine
     # container_name: reverse_proxy
     ports:
-      # Expone el puerto 80 del host al 80 del contenedor.
+      # Expone el puerto 8080 del host al 80 del contenedor.
       # Este es el ÚNICO punto de entrada a tu aplicación.
-      - "80:80"
+      - "8080:80"
     volumes:
       # Monta el archivo de configuración de Nginx
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
@@ -18,7 +18,7 @@ services:
     depends_on:
       - frontend_deliveries
       - backend_deliveries
-      # - backend_dinein
+      - backend_dinein
 
   frontend_deliveries:
     container_name: frontend_deliveries
@@ -76,8 +76,8 @@ services:
       - backend_net # Solo en la red de backend
     volumes:
       - redis_data:/data
-    env_file:
-      - ./envs/.env.redis
+    # run redis with password from .env
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
 
   # RUNS ON PORT 5672
   rabbitmq:
