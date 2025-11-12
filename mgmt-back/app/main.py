@@ -14,7 +14,7 @@ from app.services.pubsub.rabbit import RabbitPubSubService
 from app.services.ws.connection_manager import ConnectionManager
 from app.lib.utils.order import order_from_items
 from app.database.models import OrderStatus, OrderType, Order, Dish, OrderItem
-from app.lib.types.http import LoginRequest, LoginResponse, SessionData
+from app.lib.types.http import LoginRequest, LoginResponse, SessionData, UpdateOrderStatusRequest
 
 load_dotenv()
 
@@ -96,13 +96,13 @@ async def create_order(items: List[OrderItem], current_user: SessionData = Depen
     return order
 
 @app.put("/orders/{order_id}/status", response_model=Order)
-async def update_order_status(order_id: str, new_status: OrderStatus, current_user: SessionData = Depends(get_current_user)):
-    success = db_client.update_order_status(order_id, new_status)
+async def update_order_status(order_id: str, request: UpdateOrderStatusRequest, current_user: SessionData = Depends(get_current_user)):
+    success = db_client.update_order_status(order_id, request.status)
     if not success:
         raise HTTPException(status_code=404, detail="Order not found")
     order = db_client.get_order_by_id(order_id)
     if order:
-        await pubsub.pub("orders:updated", order.model_dump(mode='json'))
+        await pubsub.pub("orders:updated", order.model_dump(mode='json', by_alias=True))
         return order
     raise HTTPException(status_code=404, detail="Order not found")
 

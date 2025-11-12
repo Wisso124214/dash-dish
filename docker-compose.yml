@@ -15,6 +15,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - frontend_net # Solo necesita estar en la red de frontend
+      - register_net # Para comunicarse con las terminales de registro
     depends_on:
       - frontend_deliveries
       - backend_deliveries
@@ -48,6 +49,7 @@ services:
     networks:
       - frontend_net # Para hablar con el proxy
       - backend_net # Para hablar con la DB, Rabbit, etc.
+      - register_net # Para que las terminales puedan conectarse
     env_file:
       - ./mgmt-back/.env
     depends_on:
@@ -55,6 +57,52 @@ services:
       - redis
       - rabbitmq
       - openldap
+
+  # REGISTER TERMINALS - 3 Linux machines running the CLI
+  register_terminal_1:
+    container_name: register_terminal_1
+    build: ./register
+    networks:
+      register_net:
+        ipv4_address: 172.25.0.10  # Fixed IP for access control
+    stdin_open: true
+    tty: true
+    environment:
+      - API_URL=http://reverse_proxy/orders
+      - TERMINAL_ID=terminal_1
+    depends_on:
+      - backend_dinein
+      - reverse_proxy
+
+  register_terminal_2:
+    container_name: register_terminal_2
+    build: ./register
+    networks:
+      register_net:
+        ipv4_address: 172.25.0.11  # Fixed IP for access control
+    stdin_open: true
+    tty: true
+    environment:
+      - API_URL=http://reverse_proxy/orders
+      - TERMINAL_ID=terminal_2
+    depends_on:
+      - backend_dinein
+      - reverse_proxy
+
+  register_terminal_3:
+    container_name: register_terminal_3
+    build: ./register
+    networks:
+      register_net:
+        ipv4_address: 172.25.0.12  # Fixed IP for access control
+    stdin_open: true
+    tty: true
+    environment:
+      - API_URL=http://reverse_proxy/orders
+      - TERMINAL_ID=terminal_3
+    depends_on:
+      - backend_dinein
+      - reverse_proxy
 
   # Servicios de backend (bases de datos, caché, colas, LDAP)
   # RUNS ON PORT 27017
@@ -109,6 +157,12 @@ networks:
     driver: bridge
   backend_net:
     driver: bridge
+  register_net:  # Isolated network for register terminals
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+          gateway: 172.25.0.1
 
 volumes:
   mongo_data:

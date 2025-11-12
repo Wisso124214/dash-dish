@@ -1,50 +1,91 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { SERVER_URL } from '../../config';
-import { useEffect, useState } from 'react';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
-  validatePassword,
-  validateConfirmPassword,
-} from '@/utils/validator/validator.tsx';
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "sonner";
+import { SERVER_URL } from "../../config";
+import { useEffect, useState } from "react";
+import { validationValues } from "@/utils/validator/validator.tsx";
+import { useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(
+        validationValues.user.password.min,
+        `La contraseña debe tener al menos ${validationValues.user.password.min} caracteres`
+      )
+      .max(
+        validationValues.user.password.max,
+        `La contraseña no puede tener más de ${validationValues.user.password.max} caracteres`
+      )
+      .regex(
+        /[A-Z]/,
+        "La contraseña debe contener al menos una letra mayúscula"
+      )
+      .regex(
+        /[a-z]/,
+        "La contraseña debe contener al menos una letra minúscula"
+      )
+      .regex(/[0-9]/, "La contraseña debe contener al menos un número")
+      .regex(
+        /[-:+_º·$/[\]}{|~€|@#~€¬`«»%()?¿¡;.'"!@#\\$/%^,&*]/,
+        "La contraseña debe contener al menos un símbolo"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPassword() {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errorPassword, setErrorPassword] = useState('');
-  const [errorConfirmPassword, setErrorConfirmPassword] = useState('');
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState("");
+  const navigate = useNavigate();
+  const form = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    const token = urlParams.get("token");
     if (token) {
       setToken(token);
     }
   }, []);
 
-  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    if (errorPassword || errorConfirmPassword) {
-      toast.error('Por favor, corrija los errores antes de continuar.');
-      return;
-    }
-    fetch(SERVER_URL + '/resetPassword', {
-      method: 'POST',
+  const onSubmit = async (data: ResetPasswordFormValues) => {
+    fetch(SERVER_URL + "/resetPassword", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        password,
-        confirmPassword,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
         token,
       }),
     })
@@ -53,89 +94,79 @@ export default function ResetPassword() {
         if (!response.errorCode) {
           toast.success(
             response.message ||
-              'Su contraseña ha sido reestablecida exitosamente. Por favor inicie sesión de nuevo para continuar.'
+              "Su contraseña ha sido reestablecida exitosamente. Por favor inicie sesión de nuevo para continuar."
           );
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 2000);
+          navigate("/login");
         } else {
           toast.error(
-            response.message || 'Hubo un error inesperado, intente de nuevo.'
+            response.message || "Hubo un error inesperado, intente de nuevo."
           );
         }
       })
       .catch(() => {
         toast.error(
-          'Lo sentimos. Hubo un error inesperado. Por favor, intente más tarde.'
+          "Lo sentimos. Hubo un error inesperado. Por favor, intente más tarde."
         );
       });
   };
 
   return (
-    <div className='flex items-center justify-center h-screen w-full'>
-      <Card className='w-full max-w-sm'>
+    <div className="flex items-center justify-center h-screen w-full">
+      <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Reestablezca su contraseña</CardTitle>
         </CardHeader>
         <CardContent>
-          <form
-            className='w-full max-h-[50vh] overflow-y-auto pr-4'
-            style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'var(--primary-color) transparent',
-            }}
-          >
-            <div className='flex flex-col gap-6'>
-              <div className='grid gap-2'>
-                <Label htmlFor='password'>Contraseña</Label>
-                <Input
-                  id='password'
-                  type='password'
-                  value={password}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setPassword(value);
-                    const error = validatePassword(value);
-                    setErrorPassword(error);
-                  }}
-                  placeholder='•••••••••••'
-                  required
-                />
-                {errorPassword !== '' && (
-                  <span className='text-destructive text-sm font-semibold'>
-                    {errorPassword}
-                  </span>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="w-full max-h-[50vh] overflow-y-auto pr-4 space-y-6"
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "var(--primary-color) transparent",
+              }}
+            >
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contraseña</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="•••••••••••"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-              <div className='grid gap-2'>
-                <Label htmlFor='confirm-password'>Confirmar contraseña</Label>
-                <Input
-                  id='confirm-password'
-                  type='password'
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setConfirmPassword(value);
-                    const error = validateConfirmPassword(password, value);
-                    setErrorConfirmPassword(error);
-                  }}
-                  placeholder='•••••••••••'
-                  required
-                />
-                {errorConfirmPassword !== '' && (
-                  <span className='text-destructive text-sm font-semibold'>
-                    {errorConfirmPassword}
-                  </span>
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar contraseña</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="•••••••••••"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-            </div>
-          </form>
+              />
+              <Button type="submit" className="w-full">
+                Reestablecer contraseña
+              </Button>
+            </form>
+          </Form>
         </CardContent>
-        <CardFooter className='flex-col gap-2'>
-          <Button type='submit' onClick={handleLogin} className='w-full'>
-            Reestablecer contraseña
-          </Button>
-        </CardFooter>
+        <CardFooter className="flex-col gap-2"></CardFooter>
       </Card>
     </div>
   );

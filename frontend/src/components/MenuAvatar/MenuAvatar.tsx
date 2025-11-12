@@ -9,8 +9,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SERVER_URL } from '../../../config';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
 
 export function MenuAvatar() {
+  const navigate = useNavigate();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -46,7 +49,7 @@ export function MenuAvatar() {
                   toast.success('Sesión cerrada con éxito.');
                   localStorage.removeItem('userData');
                   setTimeout(() => {
-                    window.location.href = '/login';
+                    navigate('/login');
                   }, 1000);
                 } else {
                   toast.error(res.message || 'Error al cerrar sesión.');

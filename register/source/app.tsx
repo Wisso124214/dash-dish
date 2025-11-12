@@ -5,6 +5,7 @@ import { useAtomValue } from 'jotai';
 import { sessionAtom, screenAtom } from './lib/atoms.js';
 import CashRegisterScreen from './screens/CashRegisterScreen.js';
 import KitchenScreen from './screens/KitchenScreen.js';
+import AdminScreen from './screens/AdminScreen.js';
 
 export default function App() {
 	const session = useAtomValue(sessionAtom);
@@ -21,6 +22,10 @@ export default function App() {
 
 	if (session.role === "kitchen") {
 		return <KitchenScreen />;
+	}
+
+	if (session.role === "admin") {
+		return <AdminScreen />;
 	}
 
 	return (

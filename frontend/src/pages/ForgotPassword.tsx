@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -7,113 +7,124 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { SERVER_URL } from '../../config';
-import { useState } from 'react';
-import { validateEmail } from '@/utils/validator/validator.tsx';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "sonner";
+import { SERVER_URL } from "../../config";
+import { validationValues } from "@/utils/validator/validator.tsx";
+import { useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const forgotPasswordSchema = z.object({
+  email: z
+    .email("El email no es válido")
+    .min(1, "El email es obligatorio")
+    .max(
+      validationValues.user.email.max,
+      `El email no puede tener más de ${validationValues.user.email.max} caracteres`
+    ),
+});
+
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
-  const [errorEmail, setErrorEmail] = useState('');
+  const navigate = useNavigate();
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
-  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    if (errorEmail) {
-      toast.error('Por favor, corrija los errores antes de continuar.');
-      return;
-    }
-    fetch(SERVER_URL + '/forgotPassword', {
-      method: 'POST',
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
+    fetch(SERVER_URL + "/forgotPassword", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email,
+        email: data.email,
       }),
-      credentials: 'include',
+      credentials: "include",
     })
       .then((res) => res.json())
       .then((response) => {
         if (!response.errorCode) {
           toast.success(
             response.message ||
-              'Se ha enviado un correo de verificación a la dirección ingresada. Por favor, revise su correo y siga los pasos indicados.',
-            15000
+              "Se ha enviado un correo de verificación a la dirección ingresada. Por favor, revise su correo y siga los pasos indicados."
           );
-          localStorage.setItem(
-            'userData',
-            JSON.stringify({ isLoggedIn: true })
-          );
+          // Don't set isLoggedIn for forgot password
+          form.reset();
         } else {
           toast.error(
-            response.message || 'Hubo un error inesperado. Intente nuevamente'
+            response.message || "Hubo un error inesperado. Intente nuevamente"
           );
         }
       })
       .catch(() => {
-        toast.error('Hubo un error inesperado. Por favor, intente más tarde.');
+        toast.error("Hubo un error inesperado. Por favor, intente más tarde.");
       });
   };
 
   return (
-    <div className='flex items-center justify-center h-screen w-full'>
-      <Card className='w-full max-w-sm'>
+    <div className="flex items-center justify-center h-screen w-full">
+      <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Olvidó su contraseña?</CardTitle>
           <CardDescription>
             Ingrese sus email para enviarle un correo de autenticación
           </CardDescription>
           <CardAction>
-            <Button
-              onClick={() => (window.location.href = '/login')}
-              variant='link'
-            >
+            <Button onClick={() => navigate("/login")} variant="link">
               Login
             </Button>
           </CardAction>
         </CardHeader>
         <CardContent>
-          <form
-            className='w-full max-h-[50vh] overflow-y-auto pr-4'
-            style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'var(--primary-color) transparent',
-            }}
-          >
-            <div className='flex flex-col gap-6'>
-              <div className='grid gap-2'>
-                <Label htmlFor='email'>Correo electrónico</Label>
-                <Input
-                  id='email'
-                  type='email'
-                  value={email}
-                  onChange={async (e) => {
-                    const value = e.target.value;
-                    setEmail(value);
-                    const error = await validateEmail(value);
-                    if (error !== 'El email ya está en uso.')
-                      setErrorEmail(error);
-                  }}
-                  placeholder='usuario@ejemplo.com'
-                  required
-                />
-                {errorEmail !== '' && (
-                  <span className='text-destructive text-sm font-semibold'>
-                    {errorEmail}
-                  </span>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="w-full max-h-[50vh] overflow-y-auto pr-4 space-y-6"
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "var(--primary-color) transparent",
+              }}
+            >
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Correo electrónico</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="usuario@ejemplo.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-            </div>
-          </form>
+              />
+              <Button type="submit" className="w-full">
+                Reestablecer contraseña
+              </Button>
+            </form>
+          </Form>
         </CardContent>
-        <CardFooter className='flex-col gap-2'>
-          <Button type='submit' onClick={handleLogin} className='w-full'>
-            Reestablecer contraseña
-          </Button>
-        </CardFooter>
+        <CardFooter className="flex-col gap-2"></CardFooter>
       </Card>
     </div>
   );

@@ -3,20 +3,11 @@ import { SERVER_URL, endpoints } from '../../../config';
 import Dish from '../Dish/Dish';
 import Loader from '../Loader/Loader';
 import { useSelectedDish } from './SelectedDishContext';
-
-type DishData = {
-  id_api: string;
-  title: string;
-  description: string;
-  cost_unit: number;
-  categories: string[];
-  extras: { name: string; cost: number }[];
-  preview_img: string;
-};
-
+import type { Dish as DishType } from '@/lib/types';
 export default function DishList() {
   const intervalRef = useRef<number | null>(null);
-  const [dishes, setDishes] = useState<DishData[]>([]);
+
+  const [dishes, setDishes] = useState<DishType[]>([]);
   const { setSelectedDish } = useSelectedDish();
 
   const fetchDishes = async () => {
@@ -78,7 +69,7 @@ export default function DishList() {
         <>
           {dishes.map((dish, index) => (
             <div key={index} onClick={() => setSelectedDish(dish)}>
-              <Dish data={dish} />
+              <Dish dish={dish} />
             </div>
           ))}
           <Loader />

@@ -1,20 +1,22 @@
-import React, {useState, useEffect} from 'react';
-import {Text, Box, useInput} from 'ink';
-import {subscribeToOrderUpdates} from '../lib/apiManager.js';
+import React, {useState, useEffect, useRef} from 'react';
+import {Text, Box, useInput, measureElement} from 'ink';
+import {subscribeToOrderUpdates, fetchMenu, updateOrderStatus} from '../lib/apiManager.js';
 import {OrderItem} from '../components/OrderItem.js';
+import {ScrollArea, type ScrollAreaRef} from '../components/ScrollArea.js';
 import type {Order, Dish} from '../lib/types/index.js';
-import {useStdoutDimensions} from '../lib/hooks/useStdoutDimensions.js';
+import { useStdoutDimensions } from '../lib/hooks/useStdoutDimensions.js';
 
 export default function KitchenScreen() {
 	const [orders, setOrders] = useState<Order[]>([]);
 	const [menu, setMenu] = useState<Dish[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const [scrollOffset, setScrollOffset] = useState(0);
 	const [_, height] = useStdoutDimensions();
 	const [connectionStatus, setConnectionStatus] = useState<
 		'connecting' | 'connected' | 'error'
 	>('connecting');
 	const [errorMessage, setErrorMessage] = useState<string>('');
+	const scrollAreaRef = useRef<ScrollAreaRef>(null);
+	const orderRefs = useRef<Map<string, any>>(new Map());
 
 	// Subscribe to order updates via WebSocket
 	useEffect(() => {
@@ -33,10 +35,11 @@ export default function KitchenScreen() {
 							const newOrders = [...prevOrders];
 							newOrders[existingIndex] = order;
 							return newOrders;
-						} else {
+						} else {					
 							return [order, ...prevOrders]; // Add new orders at the top
 						}
 					});
+
 				},
 				(error: Error) => {
 					setConnectionStatus('error');
@@ -73,7 +76,6 @@ export default function KitchenScreen() {
 	useEffect(() => {
 		async function loadMenu() {
 			try {
-				const {fetchMenu} = await import('../lib/apiManager.js');
 				const fetchedMenu = await fetchMenu();
 				setMenu(fetchedMenu);
 			} catch (error) {
@@ -83,45 +85,70 @@ export default function KitchenScreen() {
 		loadMenu();
 	}, []);
 
-	// Handle keyboard navigation
+	// Reset selection if it's out of bounds
+	useEffect(() => {
+		if (orders.length > 0 && selectedIndex >= orders.length) {
+			setSelectedIndex(orders.length - 1);
+		} else if (orders.length === 0) {
+			setSelectedIndex(0);
+		}
+	}, [orders.length, selectedIndex]);
+
+	// Handle keyboard navigation for order selection
 	useInput((_input, key) => {
 		if (orders.length === 0) return;
 
 		if (key.upArrow) {
-			setSelectedIndex(prev => Math.max(0, prev - 1));
+			setSelectedIndex(prev => {
+				const newIndex = Math.max(0, prev - 1);
+				// Scroll the ScrollArea to show the selected order
+				scrollToOrder(newIndex);
+				return newIndex;
+			});
 		} else if (key.downArrow) {
-			setSelectedIndex(prev => Math.min(orders.length - 1, prev + 1));
+			setSelectedIndex(prev => {
+				const newIndex = Math.min(orders.length - 1, prev + 1);
+				// Scroll the ScrollArea to show the selected order
+				scrollToOrder(newIndex);
+				return newIndex;
+			});
+		}
+		else if (key.return) {
+			console.log('Enter key pressed to mark order as done');
+			const selectedOrder = orders[selectedIndex];
+			if (!selectedOrder || !selectedOrder._id) return;
+			updateOrderStatus(selectedOrder._id, "done").catch(error => {
+				console.error('Failed to update order status:', error);
+			});
 		}
 	});
 
-	// Auto-scroll logic
-	useEffect(() => {
-		if (orders.length === 0) return;
+	// Function to calculate and scroll to a specific order
+	const scrollToOrder = (orderIndex: number) => {
+		if (!scrollAreaRef.current || orders.length === 0) return;
 
-		const maxVisibleItems = Math.max(1, Math.floor((height - 8) / 8)); // ~8 lines per order item
+		const orderId = orders[orderIndex]?._id;
+		if (!orderId) return;
 
-		// Scroll down if selected item is below visible area
-		if (selectedIndex >= scrollOffset + maxVisibleItems) {
-			setScrollOffset(selectedIndex - maxVisibleItems + 1);
+		let scrollPosition = 0;
+		for (let i = 0; i < orderIndex; i++) {
+			const prevOrder = orders[i];
+			if (!prevOrder?._id) continue;
+
+			const prevElement = orderRefs.current.get(prevOrder._id);
+			if (prevElement) {
+				const prevDimensions = measureElement(prevElement);
+				scrollPosition += prevDimensions.height;
+			}
 		}
-		// Scroll up if selected item is above visible area
-		else if (selectedIndex < scrollOffset) {
-			setScrollOffset(selectedIndex);
-		}
-	}, [selectedIndex, orders.length, height]);
 
-	// Reset scroll when orders change significantly
-	useEffect(() => {
-		if (selectedIndex >= orders.length && orders.length > 0) {
-			setSelectedIndex(orders.length - 1);
-		}
-	}, [orders.length, selectedIndex]);
+		scrollAreaRef.current.scrollTo(scrollPosition);
+	};
 
-	const maxVisibleItems = Math.max(1, Math.floor((height - 8) / 8));
-	const visibleOrders = orders.slice(
-		scrollOffset,
-		scrollOffset + maxVisibleItems,
-	);
+	// Calculate the height for the scroll area
+	// Header (3 lines) + Status (2 lines) + Error (if any, 2 lines) + Total orders (2 lines) + Help text (3 lines)
+	const headerHeight = 3 + 2 + (errorMessage ? 2 : 0) + 2 + 3;
+	const scrollAreaHeight = Math.max(10, height - headerHeight);
 
 	return (
 		<Box flexDirection="column" padding={1}>
@@ -173,40 +200,42 @@ export default function KitchenScreen() {
 				<Box flexDirection="column">
 					<Box marginBottom={1}>
 						<Text>
-							Total Orders: <Text bold>{orders.length}</Text>
-						</Text>
-						{orders.length > maxVisibleItems && (
-							<Text dimColor>
-								{' '}
-								(Showing {scrollOffset + 1}-
-								{Math.min(scrollOffset + maxVisibleItems, orders.length)})
+							Total Orders: <Text bold>{orders.length}</Text> | Selected:{' '}
+							<Text bold color="blue">
+								{selectedIndex + 1}
 							</Text>
-						)}
+						</Text>
 					</Box>
 
-					{visibleOrders.map((order, index) => (
-						<OrderItem
-							key={order._id}
-							order={order}
-							menu={menu}
-							selected={scrollOffset + index === selectedIndex}
-						/>
-					))}
-
-					{orders.length > maxVisibleItems && (
-						<Box marginTop={1}>
-							<Text dimColor>
-								Use ↑↓ arrow keys to navigate • Scroll: {scrollOffset + 1}/
-								{orders.length - maxVisibleItems + 1}
-							</Text>
-						</Box>
-					)}
+					<ScrollArea
+						ref={scrollAreaRef}
+						height={scrollAreaHeight}
+						enableScrollKeys={false}
+					>
+						{orders.map((order, index) => (
+							<Box
+								key={order._id || index}
+								ref={(el: any) => {
+									if (el && order._id) {
+										orderRefs.current.set(order._id, el);
+									}
+								}}
+							>
+								<OrderItem
+									order={order}
+									menu={menu}
+									selected={index === selectedIndex}
+								/>
+							</Box>
+						))}
+					</ScrollArea>
 				</Box>
 			)}
 
 			{/* Help Text */}
-			<Box marginTop={1} borderStyle="round" borderColor="gray" padding={1}>
+			<Box  borderStyle="round" borderColor="gray">
 				<Text dimColor>↑↓: Navigate orders</Text>
+				<Text dimColor> | Enter: Mark order as done</Text>
 			</Box>
 		</Box>
 	);
